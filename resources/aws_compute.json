@@ -1,0 +1,27 @@
+{"InstanceType":"c5.large","vCpu":2,"Mem":4}
+{"InstanceType":"c5.xlarge","vCpu":4,"Mem":8}
+{"InstanceType":"c5.2xlarge","vCpu":8,"Mem":16}
+{"InstanceType":"c5.4xlarge","vCpu":16,"Mem":32}
+{"InstanceType":"c5.9xlarge","vCpu":36,"Mem":72}
+{"InstanceType":"c5.12xlarge","vCpu":48,"Mem":96}
+{"InstanceType":"c5.18xlarge","vCpu":72,"Mem":144}
+{"InstanceType":"c5.24xlarge","vCpu":96,"Mem":192}
+{"InstanceType":"c5.metal","vCpu":96,"Mem":192}
+{"InstanceType":"c5d.large","vCpu":2,"Mem":4,"Storage":"NVMe SSD"}
+{"InstanceType":"c5d.xlarge","vCpu":4,"Mem":8,"Storage":"NVMe SSD"}
+{"InstanceType":"c5d.2xlarge","vCpu":8,"Mem":16,"Storage":"NVMe SSD"}
+{"InstanceType":"c5d.4xlarge","vCpu":16,"Mem":32,"Storage":"NVMe SSD"}
+{"InstanceType":"c5d.9xlarge","vCpu":36,"Mem":72,"Storage":"NVMe SSD"}
+{"InstanceType":"c5d.18xlarge","vCpu":72,"Mem":144,"Storage":"NVMe SSD"}
+{"InstanceType":"c5n.large","vCpu":2,"Mem":5}
+{"InstanceType":"c5n.xlarge","vCpu":4,"Mem":10}
+{"InstanceType":"c5n.2xlarge","vCpu":8,"Mem":21}
+{"InstanceType":"c5n.4xlarge","vCpu":16,"Mem":42}
+{"InstanceType":"c5n.9xlarge","vCpu":36,"Mem":96}
+{"InstanceType":"c5n.18xlarge","vCpu":72,"Mem":192}
+{"InstanceType":"c5n.metal","vCpu":72,"Mem":192}
+{"InstanceType":"c4.large","vCpu":2,"Mem":3}
+{"InstanceType":"c4.xlarge","vCpu":4,"Mem":7}
+{"InstanceType":"c4.2xlarge","vCpu":8,"Mem":15}
+{"InstanceType":"c4.4xlarge","vCpu":16,"Mem":30}
+{"InstanceType":"c4.8xlarge","vCpu":36,"Mem":60}

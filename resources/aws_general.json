@@ -1,0 +1,43 @@
+{"InstanceType":"a1.medium","vCpu":1,"Mem":2}
+{"InstanceType":"a1.large","vCpu":2,"Mem":4}
+{"InstanceType":"a1.xlarge","vCpu":4,"Mem":8}
+{"InstanceType":"a1.2xlarge","vCpu":8,"Mem":16}
+{"InstanceType":"a1.4xlarge","vCpu":16,"Mem":32}
+{"InstanceType":"m5.large","vCpu":2,"Mem":8}
+{"InstanceType":"m5.xlarge","vCpu":4,"Mem":16}
+{"InstanceType":"m5.2xlarge","vCpu":8,"Mem":32}
+{"InstanceType":"m5.4xlarge","vCpu":16,"Mem":64}
+{"InstanceType":"m5.8xlarge","vCpu":32,"Mem":128}
+{"InstanceType":"m5.12xlarge","vCpu":48,"Mem":192}
+{"InstanceType":"m5.16xlarge","vCpu":64,"Mem":256}
+{"InstanceType":"m5.24xlarge","vCpu":96,"Mem":384}
+{"InstanceType":"m5.metal","vCpu":96,"Mem":384}
+{"InstanceType":"m5d.large","vCpu":2,"Mem":8,"Storage":"NVMe SSD"}
+{"InstanceType":"m5d.xlarge","vCpu":4,"Mem":16,"Storage":"NVMe SSD"}
+{"InstanceType":"m5d.2xlarge","vCpu":8,"Mem":32,"Storage":"NVMe SSD"}
+{"InstanceType":"m5d.4xlarge","vCpu":16,"Mem":64,"Storage":"NVMe SSD"}
+{"InstanceType":"m5d.8xlarge","vCpu":32,"Mem":128,"Storage":"NVMe SSD"}
+{"InstanceType":"m5d.12xlarge","vCpu":48,"Mem":192,"Storage":"NVMe SSD"}
+{"InstanceType":"m5d.16xlarge","vCpu":64,"Mem":256,"Storage":"NVMe SSD"}
+{"InstanceType":"m5d.24xlarge","vCpu":96,"Mem":384,"Storage":"NVMe SSD"}
+{"InstanceType":"m5d.metal","vCpu":96,"Mem":384,"Storage":"NVMe SSD"}
+{"InstanceType":"m5a.large","vCpu":2,"Mem":8}
+{"InstanceType":"m5a.xlarge","vCpu":4,"Mem":16}
+{"InstanceType":"m5a.2xlarge","vCpu":8,"Mem":32}
+{"InstanceType":"m5a.4xlarge","vCpu":16,"Mem":64}
+{"InstanceType":"m5a.8xlarge","vCpu":32,"Mem":128}
+{"InstanceType":"m5a.12xlarge","vCpu":48,"Mem":192}
+{"InstanceType":"m5a.16xlarge","vCpu":64,"Mem":256}
+{"InstanceType":"m5a.24xlarge","vCpu":96,"Mem":384}
+{"InstanceType":"m5ad.large","vCpu":2,"Mem":8,"Storage":"NVMe SSD"}
+{"InstanceType":"m5ad.xlarge","vCpu":4,"Mem":16,"Storage":"NVMe SSD"}
+{"InstanceType":"m5ad.2xlarge","vCpu":8,"Mem":32,"Storage":"NVMe SSD"}
+{"InstanceType":"m5ad.4xlarge","vCpu":16,"Mem":64,"Storage":"NVMe SSD"}
+{"InstanceType":"m5ad.12xlarge","vCpu":48,"Mem":192,"Storage":"NVMe SSD"}
+{"InstanceType":"m5ad.24xlarge","vCpu":96,"Mem":384,"Storage":"NVMe SSD"}
+{"InstanceType":"m4.large","vCpu":2,"Mem":8}
+{"InstanceType":"m4.xlarge","vCpu":4,"Mem":16}
+{"InstanceType":"m4.2xlarge","vCpu":8,"Mem":32}
+{"InstanceType":"m4.4xlarge","vCpu":16,"Mem":64}
+{"InstanceType":"m4.10xlarge","vCpu":40,"Mem":160}
+{"InstanceType":"m4.16xlarge","vCpu":64,"Mem":256}

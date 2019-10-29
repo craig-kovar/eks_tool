@@ -1,0 +1,12 @@
+scratch
+lib/*.pyc
+lib/UI/*.pyc
+lib/cloud/*.pyc
+lib/console/*.pyc
+lib/utils/*.pyc
+lib/configurations/*.pyc
+.idea
+lib/__pycache__
+lib/UI/__pycache__
+work
+save
