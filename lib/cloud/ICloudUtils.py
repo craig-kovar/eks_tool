@@ -205,3 +205,9 @@ def delete_vpc_stack(stack_name, attempts, wait_sec):
     global TYPE
     if TYPE == "aws":
         aws.delete_vpc_stack(stack_name, attempts, wait_sec)
+
+
+def get_storage_class():
+    global TYPE
+    if TYPE == "aws":
+        return aws.storage_class

@@ -21,6 +21,8 @@ _vpctemplate = "https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/201
 _ekstemplate = "https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-09-17/amazon-eks-nodegroup.yaml"
 _eks_key_name = "cb-day-se"
 
+storage_class = ["gp2", "io1"]
+
 
 # ---------------------------------------------------------------#
 #	Methods

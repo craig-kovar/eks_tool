@@ -176,7 +176,7 @@ class WrkNodeTop:
 
         self.TButton_Cancel = ttk.Button(top)
         self.TButton_Cancel.place(relx=0.743, rely=0.92, height=24, width=120)
-        self.TButton_Cancel.configure(command=lambda: self.cancel_click)
+        self.TButton_Cancel.configure(command=lambda: self.cancel_click())
         self.TButton_Cancel.configure(takefocus="")
         self.TButton_Cancel.configure(text='''Cancel''')
 
@@ -206,6 +206,7 @@ class WrkNodeTop:
                 , relwidth=0.336)
         self.TEntry_AMI.configure(takefocus="")
         self.TEntry_AMI.configure(cursor="ibeam")
+        self.TEntry_AMI.insert(0, self.wrk_node.get_ami())
 
         self.TButton_AMI = ttk.Button(top)
         self.TButton_AMI.place(relx=0.761, rely=0.532, height=24, width=120)
@@ -247,8 +248,8 @@ class WrkNodeTop:
             self.LblWrkNode_Label['text'] = self.LblWrkNode_Label['text'] + "{}\n".format(label)
 
     def cancel_click(self):
-        #print('WrkNode_support.cancel_click')
-        #sys.stdout.flush()
+        print('WrkNode_support.cancel_click')
+        sys.stdout.flush()
         self.wrk_node = None
         self.cleanup()
 

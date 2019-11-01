@@ -7,6 +7,7 @@
 
 import sys
 import lib.UI.EKSManagement as EKSManagement
+import lib.UI.kube_config as kube_config
 
 try:
     import Tkinter as tk
@@ -37,9 +38,11 @@ def quit():
     #sys.stdout.flush()
     destroy_window()
 
-def todo():
-    print('MainScreen_support.todo')
-    sys.stdout.flush()
+def launch_kube(cb_config):
+    #print('MainScreen_support.todo')
+    #sys.stdout.flush()
+    destroy_window()
+    kube_config.vp_start_gui(cb_config)
 
 def init(top, gui, *args, **kwargs):
     global w, top_level, root

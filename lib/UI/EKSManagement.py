@@ -217,6 +217,15 @@ class ToplevelEKS:
         self.Scrolledlistbox_Nodes.configure(highlightcolor="#d9d9d9")
         self.Scrolledlistbox_Nodes.configure(selectbackground="#c4c4c4")
         self.Scrolledlistbox_Nodes.configure(selectforeground="black")
+        worker_nodes = self.cb_config.get_eks_config().get_work_nodes()
+        for itr in worker_nodes:
+            item = worker_nodes[itr]
+            if item is not None:
+                self.Scrolledlistbox_Nodes.insert('end',
+                                           "Name: {0}; Instance: {1}; Min: {2}; Max: {3}; Desired: {4}; Disk: {5}; Labels: {6}".format(
+                                               item.get_name(), item.get_instance_type(), item.get_group_min(),
+                                               item.get_group_max(), item.get_group_desired(),
+                                               item.get_volume_size(), item.get_labels()))
 
 
         self.TButton_Add_Node = ttk.Button(top)

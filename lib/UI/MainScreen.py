@@ -90,7 +90,7 @@ class Toplevel1:
         self.TButton_K8S = ttk.Button(self.Labelframe1)
         self.TButton_K8S.place(relx=0.23, rely=0.317, height=54, width=317
                 , bordermode='ignore')
-        self.TButton_K8S.configure(command=lib.UI.MainScreen_support.todo)
+        self.TButton_K8S.configure(command=lambda: lib.UI.MainScreen_support.launch_kube(cb_config))
         self.TButton_K8S.configure(takefocus="")
         self.TButton_K8S.configure(text='''Manage K8S Cluster''')
 

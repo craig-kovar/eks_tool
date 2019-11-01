@@ -5,13 +5,18 @@ class CBClusterConfig:
     def __init__(self, name):
         self.namespace = "testns"
         self.clustername = name
-        self.version = "6.0.1"
+        self.version = "6.0.3"
+        self.version_loc = 0
         self.antiaffinity = False
         self.disable_bucket_management = False
-        self.expose_admin_console = False
-        self.expose_admin_svcs = {}
-        self.expose_features = {}
+        self.tls = False
+        self.expose_admin_console = True
+        self.expose_admin_svcs = 'data'
+        self.expose_admin_svc_loc = 0
+        self.expose_features = {'admin': 0, 'xdcr': 0, 'client': 0}
+        self.external_dns = False
         self.dns = "se-couchbasedemos.com"
+        self.idx_loc = 0
         self.cluster = {'dataServiceMemoryQuota': "256", 'indexServiceMemoryQuota': "256",
                         'searchServiceMemoryQuota': "256", 'eventingServiceMemoryQuota': "256",
                         'analyticsServiceMemoryQuota': "1024", 'indexStorageSetting': "plasma",
@@ -19,8 +24,11 @@ class CBClusterConfig:
                         'autoFailoverOnDataDiskIssues': 'true', 'autoFailoverOnDataDiskIssuesTimePeriod': "120",
                         'autoFailoverServerGroup': "false"}
         self.buckets = {}
-        self.servers = {'test': CBClusterServer()}
+        self.servers = {}
         self.vct = {}
+        self.sgw = 0
+        self.app = 0
+        self.couchmart = 0
 
 
     def __str__(self):
@@ -53,6 +61,25 @@ class CBClusterConfig:
 
         return ret_string
 
+    def add_bucket(self, bucket):
+        if bucket is not None:
+            self.buckets[bucket.name] = bucket
+
+    def del_bucket(self, name):
+        try:
+            del self.buckets[name]
+        except KeyError:
+            pass
+
+    def add_server(self, server):
+        if server is not None:
+            self.servers[server.name] = server
+
+    def del_server(self, name):
+        try:
+            del self.servers[name]
+        except KeyError:
+            pass
 
 class CBClusterBucket:
 
@@ -64,7 +91,7 @@ class CBClusterBucket:
         self.ioPriority = "low"
         self.evictionPolicy = "value-eviction"
         self.conflictResolution = "seqno"
-        self.enableFlush = "true"
+        self.enableFlush = "false"
         self.enableIndexReplica = "false"
         self.compressionMode = "passive"
 
@@ -77,14 +104,14 @@ class CBClusterBucket:
 class CBClusterPod:
 
     def __init__(self):
-        self.limits = {}
-        self.requests = {}
+        self.limits = {'cpu': "0", 'memory': "0", 'memory_size': "Gi", 'storage': "0", 'storage_size': "Gi"}
+        self.requests = {'cpu': "0", 'memory': "0", 'memory_size': "Gi", 'storage': "0", 'storage_size': "Gi"}
         self.nodeselector = {}
         self.volume_mount = {
-            'default' : None,
-            'data': None,
-            'index': None,
-            'analytics': []
+            'default' : "",
+            'data': "",
+            'index': "",
+            'analytics': ["", "", "", "", "", ""]
         }
 
     def __str__(self):
@@ -92,18 +119,24 @@ class CBClusterPod:
             self.limits, self.requests, self.nodeselector, self.volume_mount
         )
 
+    def del_nodeselector(self, name):
+        try:
+            del self.nodeselector[name]
+        except KeyError:
+            pass
+
 class CBClusterServer:
 
     def __init__(self):
         self.name = None
         self.size = "1"
         self.services = {
-            'data': "disabled",
-            'index': "disabled",
-            'query': "disabled",
-            'search': "disabled",
-            'eventing': "disabled",
-            'analytics': "disabled"
+            'data': "0",
+            'index': "0",
+            'query': "0",
+            'search': "0",
+            'eventing': "0",
+            'analytics': "0"
         }
         self.pod = CBClusterPod()
 
@@ -111,3 +144,18 @@ class CBClusterServer:
         return "name: {0}; size: {1}: services: {2};\n\tpod: {3}".format(
             self.name, self.size, self.services, self.pod
         )
+
+
+class CBVct:
+
+    def __init__(self):
+        self.name = None
+        self.storage_class = "gp2"
+        self.size = "0"
+        self.size_type = "Gi"
+
+    def __str__(self):
+        return "name: {0}; storage_class: {1}; size: {2}{3}".format(self.name,
+                                                                    self.storage_class,
+                                                                    self.size,
+                                                                    self.size_type)
