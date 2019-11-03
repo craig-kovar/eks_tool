@@ -195,3 +195,9 @@ def write_error(line):
 def check_wrk_dir(config_name):
     if not os.path.exists("./work/"+config_name):
         os.makedirs("./work/"+config_name)
+
+def check_dir(config_name, subdir):
+    check_path = "./work/{0}/{1}".format(config_name, subdir)
+    if not os.path.exists(check_path):
+        os.makedirs(check_path)
+

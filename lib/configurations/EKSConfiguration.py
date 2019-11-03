@@ -85,7 +85,8 @@ class EKSConfiguration:
         return self.worker_nodes[name]
 
     def add_worker_node(self, wrk_node_config):
-        self.worker_nodes[wrk_node_config.get_name()] = wrk_node_config
+        if wrk_node_config is not None:
+            self.worker_nodes[wrk_node_config.get_name()] = wrk_node_config
 
     def del_worker_node(self, wrk_node):
         try:

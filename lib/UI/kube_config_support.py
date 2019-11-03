@@ -21,6 +21,8 @@ except ImportError:
 
 from lib.UI.bucket import BucketTopLevel as CBBucket
 from lib.UI.server import ServerTopLevel as CBServer
+import lib.utils.ekstool_utils as utils
+import lib.utils.kube_utils as kube_utils
 
 def set_Tk_var():
     global versionbox
@@ -112,8 +114,10 @@ def update_server_display():
 
 
 def build_cluster():
-    print('kube_config_support.build_cluster')
-    sys.stdout.flush()
+    #print('kube_config_support.build_cluster')
+    #sys.stdout.flush()
+    utils.check_dir(w.cb_config.name, "kube")
+    kube_utils.build_ns("./work/{0}/kube", w.cb_config.get_cbcluster_config().namespace)
 
 
 def del_server():

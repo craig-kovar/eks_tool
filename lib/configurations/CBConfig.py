@@ -4,6 +4,7 @@ from lib.configurations.CBClusterConfig import CBClusterConfig
 class CBConfig:
 
     def __init__(self, name):
+        self.name = name
         self.eks_config = EKSConfiguration(name)
         self.cbcluster_config = CBClusterConfig(name)
 

@@ -28,7 +28,10 @@ def vp_start_gui(cb_config):
     root = tk.Tk()
     top = Toplevel1 (root, cb_config)
     lib.UI.MainScreen_support.init(root, top)
-    root.mainloop()
+    try:
+        root.mainloop()
+    except UnicodeDecodeError:
+        pass
 
 w = None
 def create_Toplevel1(root, *args, **kwargs):

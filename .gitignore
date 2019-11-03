@@ -10,3 +10,7 @@ lib/__pycache__
 lib/UI/__pycache__
 work
 save
+lib/cloud/__pycache__
+lib/configurations/__pycache__
+lib/console/__pycache__
+lib/utils/__pycache__

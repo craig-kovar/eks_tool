@@ -50,6 +50,7 @@ class EKSConsole:
         print("18 - Build Worker Nodes")
         print("19 - Validate Worker Nodes")
         print("20 - Get current EKS Cluster")
+        print("21 - Label Worker Nodes")
         print("q - Return to main menu")
         print("")
 
@@ -178,6 +179,10 @@ class EKSConsole:
             print(cloud.validate_nodes_ready(self.config.get_attempts(),self.config.get_wait_sec()))
         elif str(myInput) == "20":
             cloud.get_current_cluster()
+        elif str(myInput) == "21":
+            work_nodes = self.config.get_work_nodes()
+            for itr in work_nodes:
+                cloud.apply_labels(work_nodes[itr])
         elif str(myInput) == "q":
             EKSConsole.should_run = False
 

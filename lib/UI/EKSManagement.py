@@ -29,7 +29,10 @@ def vp_start_gui(cb_config):
     EKSManagement_support.set_Tk_var()
     top = ToplevelEKS (root, cb_config)
     EKSManagement_support.init(root, top)
-    root.mainloop()
+    try:
+        root.mainloop()
+    except UnicodeDecodeError:
+        pass
 
 w = None
 def create_ToplevelEKS(root, *args, **kwargs):

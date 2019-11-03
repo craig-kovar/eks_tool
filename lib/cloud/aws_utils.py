@@ -214,7 +214,8 @@ def get_ami_all():
         # utils.writeline(str(results[inst]))
         tmp_name_array = results[inst]["Name"].split("-")
         if len(tmp_name_array) == 5:
-            if return_set.has_key(tmp_name_array[3]):
+            #if return_set.has_key(tmp_name_array[3]):
+            if tmp_name_array[3] in return_set:
                 tmp_dict = return_set[tmp_name_array[3]]
                 if tmp_dict["version"] < tmp_name_array[4]:
                     new_dict = {}
@@ -239,7 +240,8 @@ def get_ami_version(version):
         tmp_name_array = results[inst]["Name"].split("-")
         if len(tmp_name_array) == 5:
 
-            if return_set.has_key(tmp_name_array[3]):
+            #if return_set.has_key(tmp_name_array[3]):
+            if tmp_name_array[3] in return_set:
                 tmp_dict = return_set[tmp_name_array[3]]
                 if tmp_dict["version"] < tmp_name_array[4]:
                     new_dict = {}
@@ -293,7 +295,8 @@ def get_instances(cpuMin, cpuMax, memMin, memMax, diskType, instanceClass):
             if (int(currInst["vCpu"]) >= cpuMin) and (int(currInst["vCpu"]) <= cpuMax):
                 if (int(currInst["Mem"]) >= memMin) and (int(currInst["Mem"]) <= memMax):
                     if diskType is not None:
-                        if currInst.has_key("Storage"):
+                        #if currInst.has_key("Storage"):
+                        if "Storage" in currInst:
                             if currInst["Storage"] == diskType:
                                 results.append(currInst)
                         else:
@@ -399,11 +402,13 @@ def apply_labels(wrk_node):
         scale_group, "AutoScalingGroups[].Instances[].InstanceId", REGION, PROFILE), False, False, True)
 
     for i in range(1,len(instances)-1):
-        private_dns = utils.execute_command_with_return("aws ec2 describe-instances --instance-ids {0} --query {1} --region {2} --profile {3}".format(
-            instances[i].replace(",", ""),"Reservations[].Instances[].NetworkInterfaces[].PrivateDnsName",REGION,PROFILE), False, False, True)[1].replace("\"", "")
-        labels = wrk_node.get_labels()
-        for label_key in labels:
-            utils.execute_command("kubectl label nodes {0} {1}={2}".format(private_dns.replace(",",""), label_key, labels[label_key]), False)
+        private_dns_array = utils.execute_command_with_return("aws ec2 describe-instances --instance-ids {0} --query {1} --region {2} --profile {3}".format(
+            instances[i].replace(",", ""), "Reservations[].Instances[].NetworkInterfaces[].PrivateDnsName", REGION, PROFILE), False, False, True)
+        for itr in range(1,len(private_dns_array)-1):
+            private_dns = private_dns_array[itr].replace("\"", "")
+            labels = wrk_node.get_labels()
+            for label_key in labels:
+                utils.execute_command("kubectl label nodes {0} {1}={2}".format(private_dns.replace(",",""), label_key, labels[label_key]), True)
 
 
 def get_current_cluster():

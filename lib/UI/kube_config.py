@@ -28,7 +28,10 @@ def vp_start_gui(cb_config):
     kube_config_support.set_Tk_var()
     top = KubeTopLevel (root, cb_config)
     kube_config_support.init(root, top)
-    root.mainloop()
+    try:
+        root.mainloop()
+    except UnicodeDecodeError:
+        pass
 
 w = None
 def create_KubeTopLevel(root, *args, **kwargs):
