@@ -21,7 +21,7 @@ _vpctemplate = "https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/201
 _ekstemplate = "https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-09-17/amazon-eks-nodegroup.yaml"
 _eks_key_name = "cb-day-se"
 
-storage_class = ["gp2", "io1"]
+storage_class = ["gp2"]
 
 
 # ---------------------------------------------------------------#
@@ -443,3 +443,35 @@ def delete_vpc_stack(stack_name, attempts, wait_sec):
     ), False, "aws cloudformation describe-stacks --stack-name {0} --region {1} --profile {2} --query Stacks[0].StackStatus 2>&1 | grep -c \"does not exist\"".format(
         stack_name, REGION, PROFILE
     ), "1", attempts, wait_sec)
+
+
+def remove_elb(stack_name):
+    elb_query = "\"LoadBalancerDescriptions[*].{vpc:VPCId,LoadBalancerName:LoadBalancerName}\""
+    nwi_query = "\"NetworkInterfaces[*].{vpc:VpcId,AttachmentId:Attachment.AttachmentId,NetworkInterfaceId:NetworkInterfaceId}\""
+    elb_command = "aws elb describe-load-balancers --query {0} --region {1} --profile {2}"
+    vpc_command = "aws ec2 describe-vpcs --filters Name=tag:aws:cloudformation:stack-name,Values={0} --query Vpcs[*].VpcId --region {1} --profile {2}"
+    nwi_command = "aws ec2 describe-network-interfaces --query {0} --region {1} --profile {2}"
+    vpc_id = utils.execute_command_with_return(vpc_command.format(stack_name, REGION, PROFILE), False, False, True)[1].replace("\"", "")
+
+    elbs = utils.parse_results(utils.execute_command_with_return(elb_command.format(elb_query, REGION, PROFILE), False, False, True))
+
+    for itr in elbs:
+        elb = elbs[itr]
+        if elb['vpc'] == vpc_id:
+            utils.execute_command("aws elb delete-load-balancer --load-balancer-name {0} --region {1} --profile {2}".format(
+                elb['LoadBalancerName'], REGION, PROFILE), False)
+
+    nwis = utils.parse_results(
+        utils.execute_command_with_return(nwi_command.format(nwi_query, REGION, PROFILE), False, False, True))
+
+    for itr in nwis:
+        nwi = nwis[itr]
+        if nwi['vpc'] == vpc_id:
+            utils.execute_command("aws ec2 detach-network-interface --attachment-id {0} --region {1} --profile {2}".format(
+                nwi['AttachmentId'], REGION, PROFILE
+            ), False)
+            utils.execute_command("aws ec2 delete-network-interface --network-interface-id {0} --region {1} --profile {2}".format(
+                nwi['NetworkInterfaceId'], REGION, PROFILE
+            ), False)
+
+

@@ -20,6 +20,7 @@ except ImportError:
     py3 = True
 
 import lib.UI.kube_config_support as kube_config_support
+import lib.utils.ekstool_utils as utils
 
 def vp_start_gui(cb_config):
     '''Starting point when module is the main routine.'''
@@ -243,6 +244,13 @@ class KubeTopLevel:
         self.TEntry_SGW.configure(takefocus="")
         self.TEntry_SGW.configure(cursor="ibeam")
         self.TEntry_SGW.insert(0, cb_config.cbcluster_config.sgw)
+
+        self.TButton_Load_SGW = ttk.Button(self.Labelframe_General)
+        self.TButton_Load_SGW.place(relx=0.913, rely=0.10, relheight=0.250, width=70)
+
+        self.TButton_Load_SGW.configure(command=lambda: kube_config_support.load_sgw())
+        self.TButton_Load_SGW.configure(takefocus="")
+        self.TButton_Load_SGW.configure(text='''Load''')
 
         self.TEntry_App_Server = ttk.Entry(self.Labelframe_General)
         self.TEntry_App_Server.place(relx=0.818, rely=0.48, relheight=0.208
@@ -664,7 +672,7 @@ class KubeTopLevel:
         self.TButton_Build_Cluster = ttk.Button(top)
         self.TButton_Build_Cluster.place(relx=0.69, rely=0.659, height=24
                 , width=128)
-        self.TButton_Build_Cluster.configure(command=kube_config_support.build_cluster)
+        self.TButton_Build_Cluster.configure(command=lambda: kube_config_support.build_cluster(cb_config))
         self.TButton_Build_Cluster.configure(takefocus="")
         self.TButton_Build_Cluster.configure(text='''Deploy Cluster''')
 
@@ -674,6 +682,8 @@ class KubeTopLevel:
         self.TButton_Cancel.configure(command=lambda: kube_config_support.on_cancel(cb_config))
         self.TButton_Cancel.configure(takefocus="")
         self.TButton_Cancel.configure(text='''Return to Main''')
+
+        utils.set_scroll(self.Scrolledtext_Console)
 
 # The following code is added to facilitate the Scrolled widgets you specified.
 class AutoScroll(object):

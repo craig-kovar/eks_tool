@@ -211,3 +211,9 @@ def get_storage_class():
     global TYPE
     if TYPE == "aws":
         return aws.storage_class
+
+
+def remove_elb(vpc_stack_name):
+    global TYPE
+    if TYPE == "aws":
+        aws.remove_elb(vpc_stack_name)

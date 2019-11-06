@@ -27,9 +27,11 @@ class CBClusterConfig:
         self.servers = {}
         self.vct = {}
         self.sgw = 0
+        self.sgw_conf = None
         self.app = 0
         self.couchmart = 0
-
+        self.attempts = 15
+        self.wait_sec = 60
 
     def __str__(self):
         ret_string = "{\n"
@@ -42,6 +44,7 @@ class CBClusterConfig:
         ret_string = ret_string + " expose_admin_services: {0}\n".format(self.expose_admin_svcs)
         ret_string = ret_string + " expose_features: {0}\n".format(self.expose_features)
         ret_string = ret_string + " dns: {0}\n".format(self.dns)
+        ret_string = ret_string + " sgw_config: {0}\n".format(self.sgw_conf)
         ret_string = ret_string + " cluster:\n"
         ret_string = ret_string + "  {\n"
         for key in self.cluster.keys():
@@ -86,7 +89,7 @@ class CBClusterBucket:
     def __init__(self):
         self.name = None
         self.type = "couchbase"
-        self.memoryQuota = "1024"
+        self.memoryQuota = "256"
         self.replicas = "1"
         self.ioPriority = "low"
         self.evictionPolicy = "value-eviction"

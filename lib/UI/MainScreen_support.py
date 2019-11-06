@@ -6,8 +6,10 @@
 #    Oct 18, 2019 08:34:47 AM CDT  platform: Darwin
 
 import sys
+
 import lib.UI.EKSManagement as EKSManagement
 import lib.UI.kube_config as kube_config
+import pickle
 
 try:
     import Tkinter as tk
@@ -16,10 +18,13 @@ except ImportError:
 
 try:
     import ttk
+
     py3 = False
 except ImportError:
     import tkinter.ttk as ttk
+
     py3 = True
+
 
 def destroy_window():
     # Function which closes the window.
@@ -27,22 +32,64 @@ def destroy_window():
     top_level.destroy()
     top_level = None
 
+
 def launch_eks(cb_config):
-    #print('MainScreen_support.launch_eks')
-    #sys.stdout.flush()
+    # print('MainScreen_support.launch_eks')
+    # sys.stdout.flush()
     destroy_window()
     EKSManagement.vp_start_gui(cb_config)
 
+
 def quit():
-    #print('MainScreen_support.quit')
-    #sys.stdout.flush()
+    # print('MainScreen_support.quit')
+    # sys.stdout.flush()
     destroy_window()
 
+
 def launch_kube(cb_config):
-    #print('MainScreen_support.todo')
-    #sys.stdout.flush()
+    # print('MainScreen_support.todo')
+    # sys.stdout.flush()
     destroy_window()
     kube_config.vp_start_gui(cb_config)
+
+
+def save(cb_config):
+    files = [('Couchbase Configuration', '*.cbconfig')]
+    # file = asksaveasfile(filetypes=files, defaultextension=files)
+    options = {}
+    options['defaultextension'] = "cbconfig"
+    options['filetypes'] = files
+
+    if py3:
+        from tkinter import filedialog
+        file = filedialog.asksaveasfile(mode='w', **options)
+    else:
+        import tkFileDialog
+        file = tkFileDialog.asksaveasfilename(initialdir="/",
+                                              title="Select file",
+                                              filetypes=files)
+
+    pickle.dump(cb_config, open(file, "wb"))
+
+
+def load(cb_config):
+    files = [('Couchbase Configuration', '*.cbconfig')]
+    # file = asksaveasfile(filetypes=files, defaultextension=files)
+    options = {}
+    options['defaultextension'] = "cbconfig"
+    options['filetypes'] = files
+
+    if py3:
+        from tkinter import filedialog
+        file = filedialog.askopenfile(mode='w', **options)
+    else:
+        import tkFileDialog
+        file = tkFileDialog.askopenfilename(initialdir="/",
+                                            title="Select file",
+                                            filetypes=files)
+
+    w.cb_config = pickle.load(open(file, "rb"))
+
 
 def init(top, gui, *args, **kwargs):
     global w, top_level, root
@@ -50,16 +97,15 @@ def init(top, gui, *args, **kwargs):
     top_level = top
     root = top
 
+
 def destroy_window():
     # Function which closes the window.
     global top_level
     top_level.destroy()
     top_level = None
 
+
 if __name__ == '__main__':
     import lib.UI.MainScreen as MainScreen
+
     MainScreen.vp_start_gui()
-
-
-
-

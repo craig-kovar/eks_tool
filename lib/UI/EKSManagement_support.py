@@ -136,6 +136,8 @@ def build_cluster():
         utils.write_error("Worker nodes not ready")
         utils.on_error("Worker nodes not ready")
 
+    utils.write_line("Build of Kubernetes Cluster is complete")
+
 
 def connect_vpc():
     print('EKSManagement_support.connect_vpc')
@@ -145,6 +147,11 @@ def connect_vpc():
 def delete_cluster():
     #print('EKSManagement_support.delete_cluster')
     #sys.stdout.flush()
+    eks_config = w.cb_config.get_eks_config()
+    eks_config.set_name(w.TEntry_Config.get())
+    eks_config.set_vpc_name(w.TEntry_VPC.get())
+    eks_config.set_eks_cluster_name(w.TEntry_EKS.get())
+
     worker_nodes = w.cb_config.get_eks_config().get_work_nodes()
     for inst in worker_nodes:
         cloud.delete_worker_node(worker_nodes[inst].get_name(), w.cb_config.get_eks_config().get_attempts(),
@@ -152,6 +159,8 @@ def delete_cluster():
 
     cloud.delete_eks_cluster(w.cb_config.get_eks_config().get_eks_cluster_name(), w.cb_config.get_eks_config().get_attempts(),
                              w.cb_config.get_eks_config().get_wait_sec())
+
+    cloud.remove_elb(w.cb_config.get_eks_config().vpc_stack_name)
 
     cloud.delete_vpc_stack(w.cb_config.get_eks_config().get_vpc_stack_name(),
                            w.cb_config.get_eks_config().get_attempts(),

@@ -23,6 +23,7 @@ from lib.UI.bucket import BucketTopLevel as CBBucket
 from lib.UI.server import ServerTopLevel as CBServer
 import lib.utils.ekstool_utils as utils
 import lib.utils.kube_utils as kube_utils
+from shutil import copyfile
 
 def set_Tk_var():
     global versionbox
@@ -113,11 +114,123 @@ def update_server_display():
                                                                                       item.services))
 
 
-def build_cluster():
-    #print('kube_config_support.build_cluster')
-    #sys.stdout.flush()
+def build_cluster(cb_config):
+    #Update kubernetes config with settings
+    #w.cb_config.get_cbcluster_config().namespace = w.TEntry_NS.get()
+    #w.cb_config.get_cbcluster_config().clustername = w.TEntry_Cluster.get()
+    #w.cb_config.get_cbcluster_config().version = versionbox
+    #w.cb_config.
+
+    update_config(cb_config)
+
+    kube_utils.build_resource_with_yaml("./resources/cbao/{0}/io1.yaml".format(kube_utils.version))
+
     utils.check_dir(w.cb_config.name, "kube")
-    kube_utils.build_ns("./work/{0}/kube", w.cb_config.get_cbcluster_config().namespace)
+    kube_utils.build_ns("./work/{0}/kube".format(w.cb_config.name), w.cb_config.get_cbcluster_config().namespace)
+
+    kube_utils.setup_tls(cb_config)
+
+    kube_utils.deploy_crd()
+    kube_utils.deploy_operator_role(w.cb_config.get_cbcluster_config().namespace)
+    kube_utils.deploy_operator_sa(w.cb_config.get_cbcluster_config().namespace)
+    kube_utils.build_operator_role_binding("./work/{0}/kube".format(w.cb_config.name),
+                                           w.cb_config.get_cbcluster_config().namespace)
+    kube_utils.deploy_operator(w.cb_config.get_cbcluster_config().namespace)
+    kube_utils.deploy_secret(w.cb_config.get_cbcluster_config().namespace)
+
+    kube_utils.build_cb_cluster("./work/{0}/kube".format(w.cb_config.name), cb_config.get_cbcluster_config())
+
+    kube_utils.build_resource_with_yaml("./work/{0}/kube/couchbase-cluster.yaml --namespace {1}".format(
+        w.cb_config.name, w.cb_config.get_cbcluster_config().namespace
+    ))
+
+    running = kube_utils.check_cluster_running(cb_config.get_cbcluster_config())
+
+    if not running:
+        utils.on_error("Couchbase Cluster is not running")
+        return
+
+    # App Servers
+    for i in range(0, int(w.cb_config.get_cbcluster_config().app)):
+        kube_utils.build_custom_pod("./work/{0}/kube".format(w.cb_config.name),
+                                    cb_config.get_cbcluster_config(),
+                                    "couchbase-{0}".format(i),
+                                    "couchbase/server:enterprise-{0}".format(w.cb_config.get_cbcluster_config().version))
+
+        kube_utils.build_resource_yaml_no_check("./work/{0}/kube/app-pod.yaml --namespace {1}".format(
+            w.cb_config.name, w.cb_config.get_cbcluster_config().namespace))
+
+    # Couchmart
+    for i in range(0, int(w.cb_config.get_cbcluster_config().couchmart)):
+        kube_utils.build_custom_pod("./work/{0}/kube".format(w.cb_config.name),
+                                    cb_config.get_cbcluster_config(),
+                                    "couchmart-{0}".format(i),
+                                    "cbck/couchmart:python2")
+
+        kube_utils.build_resource_yaml_no_check("./work/{0}/kube/app-pod.yaml --namespace {1}".format(
+            w.cb_config.name, w.cb_config.get_cbcluster_config().namespace))
+
+        #kube_utils.build_resource_yaml_no_check("./resources/cbao/{0}/couchmart.yaml --namespace {1}".format(
+        #    kube_utils.version, w.cb_config.get_cbcluster_config().namespace
+        #))
+
+    # SGW
+    try:
+        sgw_conf = w.cb_config.get_cbcluster_config().sgw_conf
+    except AttributeError:
+        sgw_conf = None
+
+
+    if sgw_conf is not None:
+        utils.write_line("\nCreating sync gateway with conf: {}".format(sgw_conf))
+        utils.execute_command("kubectl create secret generic sgw-config --from-file {0} --namespace {1}".format(
+            sgw_conf, w.cb_config.get_cbcluster_config().namespace),
+            False)
+        copyfile("./resources/cbao/{0}/sgw-deployment.yaml".format(kube_utils.version),
+                 "./work/{0}/kube/sgw-deployment.yaml".format(w.cb_config.name))
+        utils.execute_command("sed -i -e s/###replica###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
+            str(int(w.cb_config.get_cbcluster_config().sgw)), w.cb_config.name
+        ), False)
+
+        cffile_array = sgw_conf.split("/")
+        cffile = cffile_array[len(cffile_array)-1]
+
+        print("File = {}".format(cffile))
+        utils.execute_command("sed -i -e s/###conffile###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
+            cffile, w.cb_config.name
+        ), False)
+
+        kube_utils.build_resource_with_yaml(
+            "./work/{0}/kube/sgw-deployment.yaml --namespace {1}".format(
+                w.cb_config.name, w.cb_config.get_cbcluster_config().namespace))
+    else:
+        for i in range(0, min(int(w.cb_config.get_cbcluster_config().sgw), 2)):
+            if i == 0:
+                kube_utils.build_sgw_config("./work/{0}/kube".format(
+                    w.cb_config.name), w.cb_config.get_cbcluster_config(), True)
+                utils.execute_command("kubectl create secret generic sgw-config-import --from-file {0} --namespace {1}".format(
+                    "./work/{0}/kube/sgw-config.json".format(w.cb_config.name), w.cb_config.get_cbcluster_config().namespace), False)
+                kube_utils.build_resource_with_yaml("./resources/cbao/{0}/sgw-deployment-import.yaml --namespace {1}".format(
+                    kube_utils.version, w.cb_config.get_cbcluster_config().namespace))
+            else:  #Build non-import SGW using replicas
+                kube_utils.build_sgw_config("./work/{0}/kube".format(
+                    w.cb_config.name), w.cb_config.get_cbcluster_config(), False)
+                utils.execute_command("kubectl create secret generic sgw-config --from-file {0} --namespace {1}".format(
+                    "./work/{0}/kube/sgw-config.json".format(w.cb_config.name), w.cb_config.get_cbcluster_config().namespace),
+                    False)
+                copyfile("./resources/cbao/{0}/sgw-deployment.yaml".format(kube_utils.version),
+                        "./work/{0}/kube/sgw-deployment.yaml".format(w.cb_config.name))
+                utils.execute_command("sed -i s/###replica###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
+                    str(int(w.cb_config.get_cbcluster_config().sgw)-1), w.cb_config.name
+                ), False)
+                utils.execute_command("sed -i s/###conffile###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
+                    "sgw-deployment.yaml"
+                ), False)
+                kube_utils.build_resource_with_yaml(
+                    "./work/{0}/kube/sgw-deployment.yaml --namespace {1}".format(
+                        w.cb_config.name, w.cb_config.get_cbcluster_config().namespace))
+
+    utils.write_line("Build of Couchbase Cluster is complete")
 
 
 def del_server():
@@ -202,6 +315,26 @@ def update_config(cb_config):
 
     cb_config.cbcluster_config.cluster['autoFailoverTimeout'] = w.TEntry_AF_Time.get()
     cb_config.cbcluster_config.cluster['autoFailoverMaxCount'] = w.TEntry_AF_events.get()
+
+
+def load_sgw():
+    cbcluster_config = w.cb_config.get_cbcluster_config()
+    files = [('json', '*.json')]
+    # file = asksaveasfile(filetypes=files, defaultextension=files)
+    options = {}
+    options['defaultextension'] = "json"
+    options['filetypes'] = files
+
+    if py3:
+        from tkinter import filedialog
+        file = filedialog.askopenfile(mode='w', **options)
+    else:
+        import tkFileDialog
+        file = tkFileDialog.askopenfilename(initialdir="/",
+                                            title="Select file",
+                                            filetypes=files)
+
+    cbcluster_config.sgw_conf = file
 
 
 

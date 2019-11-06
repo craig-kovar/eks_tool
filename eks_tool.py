@@ -28,8 +28,8 @@ if __name__ == "__main__":
     except IOError:
         utils.write_line("Failed to load instance type information")
 
-    configName = "TestCluster"
-    cb_config = CBConfig("TestCluster")
+    configName = "testcluster"
+    cb_config = CBConfig("testcluster")
 
     if args.console:
         if sys.version_info[0] == 2:
@@ -38,10 +38,10 @@ if __name__ == "__main__":
             configName = input("Enter a name for your configuration: ")
 
 
-        cb_config = CBConfig(configName)
+        cb_config = CBConfig(configName.lower())
         console = MainConsole(configName, cb_config.eks_config)
         console.run()
     else:
         utils.set_mode("gui")
         MainScreen.vp_start_gui(cb_config)
-        print(str(cb_config))
+        #print(str(cb_config))
