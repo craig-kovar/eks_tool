@@ -10,7 +10,8 @@ class CBConfig:
 
     def __str__(self):
         divider = "------------------------------------------\n"
-        return divider + str(self.eks_config) + "<--------------->\n " + str(self.cbcluster_config) + divider
+        return divider + self.name + "\n<--------------->\n " + \
+               str(self.eks_config) + "<--------------->\n " + str(self.cbcluster_config) + divider
 
     def get_eks_config(self):
         return self.eks_config

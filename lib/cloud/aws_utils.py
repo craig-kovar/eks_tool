@@ -118,7 +118,7 @@ def cloud_get_values(command, delimiter):
     for line in p.stdout.readlines():
         line = line.decode('ascii').rstrip()
         tokens = line.split(delimiter)
-        print("Adding key {0} with value {1}".format(tokens[0], tokens[1]))
+        utils.write_line("Adding key {0} with value {1}".format(tokens[0], tokens[1]))
         _awsValues[tokens[0]] = tokens[1]
 
 
@@ -179,7 +179,7 @@ def connect_to_kube_cluster(eksname):
 
 def list_vpc():
     return utils.execute_command_with_return("aws ec2 describe-vpcs --query {0} --region {1} --profile {2}".format(
-        "'Vpcs[].{Name:Tags[?Key==`aws:cloudformation:stack-name`].Value,State:State}'", REGION, PROFILE), False, False,
+        "'Vpcs[].{name:Tags[?Key==`aws:cloudformation:stack-name`].Value,state:State,vpc_id:VpcId}'", REGION, PROFILE), False, False,
         True)
 
 
@@ -450,7 +450,7 @@ def remove_elb(stack_name):
     nwi_query = "\"NetworkInterfaces[*].{vpc:VpcId,AttachmentId:Attachment.AttachmentId,NetworkInterfaceId:NetworkInterfaceId}\""
     elb_command = "aws elb describe-load-balancers --query {0} --region {1} --profile {2}"
     vpc_command = "aws ec2 describe-vpcs --filters Name=tag:aws:cloudformation:stack-name,Values={0} --query Vpcs[*].VpcId --region {1} --profile {2}"
-    nwi_command = "aws ec2 describe-network-interfaces --query {0} --region {1} --profile {2}"
+    nwi_command = "aws ec2 describe-network-interfaces --filters Name=vpc-id,Values={3} --query {0} --region {1} --profile {2}"
     vpc_id = utils.execute_command_with_return(vpc_command.format(stack_name, REGION, PROFILE), False, False, True)[1].replace("\"", "")
 
     elbs = utils.parse_results(utils.execute_command_with_return(elb_command.format(elb_query, REGION, PROFILE), False, False, True))
@@ -462,7 +462,7 @@ def remove_elb(stack_name):
                 elb['LoadBalancerName'], REGION, PROFILE), False)
 
     nwis = utils.parse_results(
-        utils.execute_command_with_return(nwi_command.format(nwi_query, REGION, PROFILE), False, False, True))
+        utils.execute_command_with_return(nwi_command.format(nwi_query, REGION, PROFILE, vpc_id), False, False, True))
 
     for itr in nwis:
         nwi = nwis[itr]
@@ -475,3 +475,138 @@ def remove_elb(stack_name):
             ), False)
 
 
+def get_hosted_zone(dns):
+    #tmphz = utils.execute_command_with_return(
+    #    "aws route53 list-hosted-zones-by-name --output json --dns-name \"{0}\" | jq -r '.HostedZones[0].Id'".format(
+    #        dns
+    #    ), False, False, True)
+
+    tmphz = utils.execute_command_with_return(
+        "aws route53 list-hosted-zones-by-name --output json --dns-name \"{0}\" --query HostedZones[0].Id".format(
+            dns
+        ), False, False, True)
+
+    if len(tmphz) >= 1:
+        hz_array = tmphz[0].split("/")
+        hostedzone = hz_array[len(hz_array) - 1]
+    else:
+        hostedzone = None
+
+    return hostedzone
+
+
+def get_role_name(config_name):
+    role_array = utils.execute_command_with_return("aws iam list-roles --query Roles[].RoleName --region {0} --profile {1}".format(
+        REGION, PROFILE
+    ), False, False, True)
+    role = None
+
+    #print("role list = {}".format(role_array))
+    for i in role_array:
+        #print("Checking {}-NodeInstanceRole".format(config_name))
+        if "{}-NodeInstanceRole".format(config_name) in i:
+            role = i.replace(",", "")
+
+    return role
+
+
+def get_pol_arn():
+    pol_arn_array = utils.execute_command_with_return(
+        "aws iam list-policies --query 'Policies[?PolicyName==`ExternalDNS`].Arn' --region {0} --profile {1}".format(
+            REGION, PROFILE
+        ), False, False, True)
+
+    pol_arn = None
+    if len(pol_arn_array) > 1:
+        pol_arn = pol_arn_array[1]
+
+    return pol_arn
+
+
+def attach_externaldns_policy(dns, config_name):
+    hostedzone = get_hosted_zone(dns)
+
+    role = get_role_name(config_name)
+
+    pol_arn = get_pol_arn()
+
+    #print("Role = " + str(role))
+    #print("Policy ARN = " + str(pol_arn))
+
+    if hostedzone is not None and role is not None and pol_arn is not None:
+        utils.execute_command("aws iam attach-role-policy --role-name {0} --policy-arn {1} --region {2} --profile {3}".format(
+            role, pol_arn, REGION, PROFILE
+        ), False)
+
+        return True
+    else:
+        return False
+
+
+def detach_externaldns_policy(config_name):
+    role = get_role_name(config_name)
+
+    pol_arn = get_pol_arn()
+
+    if role is not None and pol_arn is not None:
+        utils.execute_command("aws iam detach-role-policy --role-name {0} --policy-arn {1} --region {2} --profile {3}".format(
+            role, pol_arn, REGION, PROFILE
+        ), True)
+
+
+def get_vpc_id(vpc_name):
+    vpc_list = utils.parse_results(list_vpc())
+    for i in vpc_list:
+        if vpc_list[i]['name'] is not None:
+            if vpc_name == vpc_list[i]['name'][0]:
+                return vpc_list[i]['vpc_id']
+
+
+def link_node_groups(cb_config):
+
+    sg_query_string = "\"SecurityGroups[].{groupName:GroupName,groupId:GroupId}\""
+    sg_list = utils.parse_results(utils.execute_command_with_return(
+        "aws ec2 describe-security-groups --query {0} --filters Name=vpc-id,Values={1} --region {2} --profile {3}".format(
+            sg_query_string, get_vpc_id(cb_config.get_eks_config().vpc_stack_name), REGION, PROFILE),
+        False, False, True))
+
+    #Build map to create
+    nodegroup_map = {}
+    for i in sg_list:
+        name_array = sg_list[i]['groupName'].split("-NodeSecurityGroup")
+        if len(name_array) > 1:
+            nodegroup_map[name_array[0]] = sg_list[i]
+
+
+    sg_command = "aws ec2 authorize-security-group-ingress --group-id {0} --protocol all --port 0-65535 --source-group {1} --region {2} --profile {3}"
+    for i in nodegroup_map:
+        curr_group_id = nodegroup_map[i]['groupId']
+        for j in nodegroup_map:
+            if i != j:
+                utils.execute_command(sg_command.format(curr_group_id, nodegroup_map[j]['groupId'], REGION, PROFILE),
+                                      False)
+
+
+def unlink_node_groups(cb_config):
+
+    sg_query_string = "\"SecurityGroups[].{groupName:GroupName,groupId:GroupId}\""
+    sg_list = utils.parse_results(utils.execute_command_with_return(
+        "aws ec2 describe-security-groups --query {0} --filters Name=vpc-id,Values={1} --region {2} --profile {3}".format(
+            sg_query_string, get_vpc_id(cb_config.get_eks_config().vpc_stack_name), REGION, PROFILE),
+        False, False, True))
+
+    #Build map to create
+    nodegroup_map = {}
+    for i in sg_list:
+        name_array = sg_list[i]['groupName'].split("-NodeSecurityGroup")
+        if len(name_array) > 1:
+            nodegroup_map[name_array[0]] = sg_list[i]
+
+
+    sg_command = "aws ec2 revoke-security-group-ingress --group-id {0} --protocol all --port 0-65535 --source-group {1} --region {2} --profile {3}"
+    for i in nodegroup_map:
+        curr_group_id = nodegroup_map[i]['groupId']
+        for j in nodegroup_map:
+            if i != j:
+                utils.execute_command(sg_command.format(curr_group_id, nodegroup_map[j]['groupId'], REGION, PROFILE),
+                                      False)

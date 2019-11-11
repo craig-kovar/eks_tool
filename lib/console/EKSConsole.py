@@ -183,6 +183,8 @@ class EKSConsole:
             work_nodes = self.config.get_work_nodes()
             for itr in work_nodes:
                 cloud.apply_labels(work_nodes[itr])
+        #elif str(myInput) == "22":
+        #    cloud.load_instance_type()
         elif str(myInput) == "q":
             EKSConsole.should_run = False
 

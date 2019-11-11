@@ -14,9 +14,11 @@ except ImportError:
 
 try:
     import ttk
+
     py3 = False
 except ImportError:
     import tkinter.ttk as ttk
+
     py3 = True
 
 from lib.UI.bucket import BucketTopLevel as CBBucket
@@ -24,6 +26,8 @@ from lib.UI.server import ServerTopLevel as CBServer
 import lib.utils.ekstool_utils as utils
 import lib.utils.kube_utils as kube_utils
 from shutil import copyfile
+import lib.cloud.ICloudUtils as cloud
+
 
 def set_Tk_var():
     global versionbox
@@ -59,8 +63,8 @@ def set_Tk_var():
 
 
 def add_bucket():
-    #print('kube_config_support.add_bucket')
-    #sys.stdout.flush()
+    # print('kube_config_support.add_bucket')
+    # sys.stdout.flush()
     bucket = CBBucket(root, None).show()
     kube_config = w.cb_config.get_cbcluster_config()
     kube_config.add_bucket(bucket)
@@ -68,16 +72,18 @@ def add_bucket():
 
 
 def del_bucket():
-    #print('kube_config_support.del_bucket')
-    #sys.stdout.flush()
+    # print('kube_config_support.del_bucket')
+    # sys.stdout.flush()
     kube_config = w.cb_config.get_cbcluster_config()
     try:
-        bucket_name = w.Scrolledlistbox_Buckets.get(w.Scrolledlistbox_Buckets.curselection(), w.Scrolledlistbox_Buckets.curselection())[0]
+        bucket_name = w.Scrolledlistbox_Buckets.get(w.Scrolledlistbox_Buckets.curselection(),
+                                                    w.Scrolledlistbox_Buckets.curselection())[0]
         name = bucket_name.split(";")[0].split(" ")[1]
         kube_config.del_bucket(name)
         update_bucket_display()
     except tk.TclError:
         pass
+
 
 def update_bucket_display():
     kube_config = w.cb_config.get_cbcluster_config()
@@ -86,17 +92,17 @@ def update_bucket_display():
     for itr in buckets:
         item = buckets[itr]
         w.Scrolledlistbox_Buckets.insert('end',
-                                       "Name: {0}; Type: {1}; Quota: {2}; Replicas: {3}; ioPriority: {4}; eviction: {5}; conflictResolution: {6}; flush: {7}".format(
-                                           item.name, item.type, item.memoryQuota,
-                                           item.replicas, item.ioPriority,
-                                           item.evictionPolicy, item.conflictResolution,
-                                           item.enableFlush
-                                       ))
+                                         "Name: {0}; Type: {1}; Quota: {2}; Replicas: {3}; ioPriority: {4}; eviction: {5}; conflictResolution: {6}; flush: {7}".format(
+                                             item.name, item.type, item.memoryQuota,
+                                             item.replicas, item.ioPriority,
+                                             item.evictionPolicy, item.conflictResolution,
+                                             item.enableFlush
+                                         ))
 
 
 def add_server():
-    #print('kube_config_support.add_server')
-    #sys.stdout.flush()
+    # print('kube_config_support.add_server')
+    # sys.stdout.flush()
     server = CBServer(root, None, w.cb_config.get_cbcluster_config()).show()
     kube_config = w.cb_config.get_cbcluster_config()
     kube_config.add_server(server)
@@ -115,11 +121,11 @@ def update_server_display():
 
 
 def build_cluster(cb_config):
-    #Update kubernetes config with settings
-    #w.cb_config.get_cbcluster_config().namespace = w.TEntry_NS.get()
-    #w.cb_config.get_cbcluster_config().clustername = w.TEntry_Cluster.get()
-    #w.cb_config.get_cbcluster_config().version = versionbox
-    #w.cb_config.
+    # Update kubernetes config with settings
+    # w.cb_config.get_cbcluster_config().namespace = w.TEntry_NS.get()
+    # w.cb_config.get_cbcluster_config().clustername = w.TEntry_Cluster.get()
+    # w.cb_config.get_cbcluster_config().version = versionbox
+    # w.cb_config.
 
     update_config(cb_config)
 
@@ -155,7 +161,8 @@ def build_cluster(cb_config):
         kube_utils.build_custom_pod("./work/{0}/kube".format(w.cb_config.name),
                                     cb_config.get_cbcluster_config(),
                                     "couchbase-{0}".format(i),
-                                    "couchbase/server:enterprise-{0}".format(w.cb_config.get_cbcluster_config().version))
+                                    "couchbase/server:enterprise-{0}".format(
+                                        w.cb_config.get_cbcluster_config().version))
 
         kube_utils.build_resource_yaml_no_check("./work/{0}/kube/app-pod.yaml --namespace {1}".format(
             w.cb_config.name, w.cb_config.get_cbcluster_config().namespace))
@@ -170,16 +177,15 @@ def build_cluster(cb_config):
         kube_utils.build_resource_yaml_no_check("./work/{0}/kube/app-pod.yaml --namespace {1}".format(
             w.cb_config.name, w.cb_config.get_cbcluster_config().namespace))
 
-        #kube_utils.build_resource_yaml_no_check("./resources/cbao/{0}/couchmart.yaml --namespace {1}".format(
+        # kube_utils.build_resource_yaml_no_check("./resources/cbao/{0}/couchmart.yaml --namespace {1}".format(
         #    kube_utils.version, w.cb_config.get_cbcluster_config().namespace
-        #))
+        # ))
 
     # SGW
     try:
         sgw_conf = w.cb_config.get_cbcluster_config().sgw_conf
     except AttributeError:
         sgw_conf = None
-
 
     if sgw_conf is not None:
         utils.write_line("\nCreating sync gateway with conf: {}".format(sgw_conf))
@@ -188,15 +194,15 @@ def build_cluster(cb_config):
             False)
         copyfile("./resources/cbao/{0}/sgw-deployment.yaml".format(kube_utils.version),
                  "./work/{0}/kube/sgw-deployment.yaml".format(w.cb_config.name))
-        utils.execute_command("sed -i -e s/###replica###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
+        utils.execute_command("sed -i .bkup s/###replica###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
             str(int(w.cb_config.get_cbcluster_config().sgw)), w.cb_config.name
         ), False)
 
         cffile_array = sgw_conf.split("/")
-        cffile = cffile_array[len(cffile_array)-1]
+        cffile = cffile_array[len(cffile_array) - 1]
 
         print("File = {}".format(cffile))
-        utils.execute_command("sed -i -e s/###conffile###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
+        utils.execute_command("sed -i .bkup s/###conffile###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
             cffile, w.cb_config.name
         ), False)
 
@@ -208,34 +214,82 @@ def build_cluster(cb_config):
             if i == 0:
                 kube_utils.build_sgw_config("./work/{0}/kube".format(
                     w.cb_config.name), w.cb_config.get_cbcluster_config(), True)
-                utils.execute_command("kubectl create secret generic sgw-config-import --from-file {0} --namespace {1}".format(
-                    "./work/{0}/kube/sgw-config.json".format(w.cb_config.name), w.cb_config.get_cbcluster_config().namespace), False)
-                kube_utils.build_resource_with_yaml("./resources/cbao/{0}/sgw-deployment-import.yaml --namespace {1}".format(
-                    kube_utils.version, w.cb_config.get_cbcluster_config().namespace))
-            else:  #Build non-import SGW using replicas
+                utils.execute_command(
+                    "kubectl create secret generic sgw-config-import --from-file {0} --namespace {1}".format(
+                        "./work/{0}/kube/sgw-config.json".format(w.cb_config.name),
+                        w.cb_config.get_cbcluster_config().namespace), False)
+                kube_utils.build_resource_with_yaml(
+                    "./resources/cbao/{0}/sgw-deployment-import.yaml --namespace {1}".format(
+                        kube_utils.version, w.cb_config.get_cbcluster_config().namespace))
+            else:  # Build non-import SGW using replicas
                 kube_utils.build_sgw_config("./work/{0}/kube".format(
                     w.cb_config.name), w.cb_config.get_cbcluster_config(), False)
                 utils.execute_command("kubectl create secret generic sgw-config --from-file {0} --namespace {1}".format(
-                    "./work/{0}/kube/sgw-config.json".format(w.cb_config.name), w.cb_config.get_cbcluster_config().namespace),
+                    "./work/{0}/kube/sgw-config.json".format(w.cb_config.name),
+                    w.cb_config.get_cbcluster_config().namespace),
                     False)
                 copyfile("./resources/cbao/{0}/sgw-deployment.yaml".format(kube_utils.version),
-                        "./work/{0}/kube/sgw-deployment.yaml".format(w.cb_config.name))
-                utils.execute_command("sed -i s/###replica###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
-                    str(int(w.cb_config.get_cbcluster_config().sgw)-1), w.cb_config.name
+                         "./work/{0}/kube/sgw-deployment.yaml".format(w.cb_config.name))
+                utils.execute_command("sed -i .bkup s/###replica###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
+                    str(int(w.cb_config.get_cbcluster_config().sgw) - 1), w.cb_config.name
                 ), False)
-                utils.execute_command("sed -i s/###conffile###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
-                    "sgw-deployment.yaml"
+                utils.execute_command("sed -i .bkup s/###conffile###/{0}/g ./work/{1}/kube/sgw-deployment.yaml".format(
+                    "sgw-config.json", w.cb_config.name
                 ), False)
                 kube_utils.build_resource_with_yaml(
                     "./work/{0}/kube/sgw-deployment.yaml --namespace {1}".format(
                         w.cb_config.name, w.cb_config.get_cbcluster_config().namespace))
 
+    if ext_dns.get() == 1:
+        utils.write_line("\nDeploying external DNS\n")
+        kube_utils.build_resource_with_yaml("./resources/cbao/{0}/externaldns-sa.yaml --namespace {1}".format(
+            kube_utils.version, w.cb_config.get_cbcluster_config().namespace
+        ))
+
+        kube_utils.build_resource_with_yaml("./resources/cbao/{0}/externaldns-cr.yaml".format(
+            kube_utils.version
+        ))
+
+        # Externaldns-crb
+        copyfile("./resources/cbao/{0}/externaldns-crb.yaml".format(kube_utils.version),
+                 "./work/{0}/kube/externaldns-crb.yaml".format(w.cb_config.name))
+
+        utils.execute_command("sed -i .bkup s/###namespace###/{0}/g ./work/{1}/kube/externaldns-crb.yaml".format(
+            w.cb_config.get_cbcluster_config().namespace, w.cb_config.name
+        ), False)
+
+        kube_utils.build_resource_with_yaml("./work/{0}/kube/externaldns-crb.yaml --namespace {1}".format(
+            w.cb_config.name, w.cb_config.get_cbcluster_config().namespace
+        ))
+
+        # Externaldns-deployment
+        copyfile("./resources/cbao/{0}/externaldns-deployment.yaml".format(kube_utils.version),
+                 "./work/{0}/kube/externaldns-deployment.yaml".format(w.cb_config.name))
+
+        extdns_policy_pass = True
+        for i in w.cb_config.get_eks_config().worker_nodes:
+            utils.write_line("Attaching External policy for worker nodes {}".format(i))
+            extdns_policy_pass = extdns_policy_pass and \
+                              cloud.attach_externaldns_policy(w.cb_config.get_cbcluster_config().dns, i)
+
+        if extdns_policy_pass:
+            utils.execute_command(
+                "sed -i .bkup s/###hostedzone###/{0}/g ./work/{1}/kube/externaldns-deployment.yaml".format(
+                    cloud.get_hosted_zone(w.cb_config.get_cbcluster_config().dns), w.cb_config.name
+                ), False)
+
+            kube_utils.build_resource_with_yaml("./work/{0}/kube/externaldns-deployment.yaml --namespace {1}".format(
+                w.cb_config.name, w.cb_config.get_cbcluster_config().namespace
+            ))
+        else:
+            utils.write_warn("Unable attach policy and deploy ExternalDNS\n")
+
     utils.write_line("Build of Couchbase Cluster is complete")
 
 
 def del_server():
-    #print('kube_config_support.del_server')
-    #sys.stdout.flush()
+    # print('kube_config_support.del_server')
+    # sys.stdout.flush()
     kube_config = w.cb_config.get_cbcluster_config()
     try:
         server_name = w.Scrolledlistbox_Servers.get(w.Scrolledlistbox_Servers.curselection(),
@@ -248,14 +302,15 @@ def del_server():
 
 
 def edit_server():
-    #print('kube_config_support.edit_server')
-    #sys.stdout.flush()
+    # print('kube_config_support.edit_server')
+    # sys.stdout.flush()
     kube_config = w.cb_config.get_cbcluster_config()
     try:
         server_name = w.Scrolledlistbox_Servers.get(w.Scrolledlistbox_Servers.curselection(),
                                                     w.Scrolledlistbox_Servers.curselection())[0]
         name = server_name.split(";")[0].split(" ")[1]
-        server = CBServer(root, w.cb_config.get_cbcluster_config().servers[name], w.cb_config.get_cbcluster_config()).show()
+        server = CBServer(root, w.cb_config.get_cbcluster_config().servers[name],
+                          w.cb_config.get_cbcluster_config()).show()
         kube_config.add_server(server)
         update_server_display()
     except tk.TclError:
@@ -337,10 +392,9 @@ def load_sgw():
     cbcluster_config.sgw_conf = file
 
 
-
 def on_cancel(cb_config):
-    #print('kube_config_support.on_cancel')
-    #sys.stdout.flush()
+    # print('kube_config_support.on_cancel')
+    # sys.stdout.flush()
 
     update_config(cb_config)
     import lib.UI.MainScreen as MainScreen
@@ -364,8 +418,5 @@ def destroy_window():
 
 if __name__ == '__main__':
     import kube_config
+
     kube_config.vp_start_gui()
-
-
-
-

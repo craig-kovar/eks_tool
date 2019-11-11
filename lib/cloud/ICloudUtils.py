@@ -217,3 +217,33 @@ def remove_elb(vpc_stack_name):
     global TYPE
     if TYPE == "aws":
         aws.remove_elb(vpc_stack_name)
+
+
+def attach_externaldns_policy(dns, config_name):
+    global TYPE
+    if TYPE == "aws":
+        return aws.attach_externaldns_policy(dns, config_name)
+
+
+def get_hosted_zone(dns):
+    global TYPE
+    if TYPE == "aws":
+        return aws.get_hosted_zone(dns)
+
+
+def detach_externaldns_policy(config_name):
+    global TYPE
+    if TYPE == "aws":
+        return aws.detach_externaldns_policy(config_name)
+
+
+def link_node_groups(cb_config):
+    global TYPE
+    if TYPE == "aws":
+        aws.link_node_groups(cb_config)
+
+
+def unlink_node_groups(cb_config):
+    global TYPE
+    if TYPE == "aws":
+        aws.unlink_node_groups(cb_config)

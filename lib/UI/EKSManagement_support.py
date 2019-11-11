@@ -23,6 +23,7 @@ from lib.UI.popup import PopupWindow as dialog
 from lib.UI.WrkNode import WrkNodeTop as WrkNode
 import lib.cloud.ICloudUtils as cloud
 import lib.utils.ekstool_utils as utils
+import time
 
 
 def set_Tk_var():
@@ -136,6 +137,9 @@ def build_cluster():
         utils.write_error("Worker nodes not ready")
         utils.on_error("Worker nodes not ready")
 
+    utils.write_line("Linking Node Groups")
+    cloud.link_node_groups(w.cb_config)
+
     utils.write_line("Build of Kubernetes Cluster is complete")
 
 
@@ -152,15 +156,23 @@ def delete_cluster():
     eks_config.set_vpc_name(w.TEntry_VPC.get())
     eks_config.set_eks_cluster_name(w.TEntry_EKS.get())
 
+    cloud.unlink_node_groups(w.cb_config)
+    time.sleep(2)
+
     worker_nodes = w.cb_config.get_eks_config().get_work_nodes()
     for inst in worker_nodes:
+        cloud.detach_externaldns_policy(worker_nodes[inst].name)
         cloud.delete_worker_node(worker_nodes[inst].get_name(), w.cb_config.get_eks_config().get_attempts(),
                                  w.cb_config.get_eks_config().get_wait_sec())
+        time.sleep(2)
 
     cloud.delete_eks_cluster(w.cb_config.get_eks_config().get_eks_cluster_name(), w.cb_config.get_eks_config().get_attempts(),
                              w.cb_config.get_eks_config().get_wait_sec())
+    time.sleep(2)
 
     cloud.remove_elb(w.cb_config.get_eks_config().vpc_stack_name)
+
+    time.sleep(2)
 
     cloud.delete_vpc_stack(w.cb_config.get_eks_config().get_vpc_stack_name(),
                            w.cb_config.get_eks_config().get_attempts(),
@@ -232,6 +244,7 @@ def update_names_and_config(top_lvl_eks):
             top_lvl_eks.Label_User['text']="User: {}".format(cloud.get_user().replace("\"", ""))
             top_lvl_eks.Label_Region['text']="Region: {}".format(cloud.get_current_region())
             top_lvl_eks.Label_VPC['text'] = "VPC: {}".format(cloud.get_vpc())
+            top_lvl_eks.cb_config.name = name
 
 
 if __name__ == '__main__':

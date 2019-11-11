@@ -44,4 +44,4 @@ if __name__ == "__main__":
     else:
         utils.set_mode("gui")
         MainScreen.vp_start_gui(cb_config)
-        #print(str(cb_config))
+        print(str(cb_config))
