@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pillowfight
+spec:
+  template:
+    metadata:
+      name: pillowfight
+    spec:
+      containers:
+      - name: pillowfight
+        image: sequoiatools/pillowfight:v5.0.1
+        command: ["cbc-pillowfight",
+                  "-U", "couchbase://cbaws-0000.cbaws.cbaws.svc/tweetsource?select_bucket=true", "--json",
+                  "-I", "10000", "-B", "1000", "-c", "-1", "-t", "1", "-u", "Administrator", "-P", "password"]
+      restartPolicy: Never

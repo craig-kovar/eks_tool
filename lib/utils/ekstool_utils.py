@@ -19,9 +19,11 @@ def set_mode(myMode):
     global mode
     mode = myMode
 
+
 def set_scroll(scrolltext):
     global scroll
     scroll = scrolltext
+
 
 def on_error(command, retval):
     write_line("Error detected:: ")
@@ -41,6 +43,7 @@ def execute_command(command, ignore_error):
 
     if retval != 0 and ignore_error == False:
         on_error(command, retval)
+        raise Exception("Failed to execute command")
 
 
 def execute_command_with_status(command, ignore_error, status_command, status, attempts, wait_sec):
@@ -67,6 +70,7 @@ def execute_command_with_status(command, ignore_error, status_command, status, a
             time.sleep(wait_sec)
 
     on_error(command, retval)
+    raise Exception("Failed to execute command and check status")
 
 
 def execute_command_with_return(command, ignore_error, print_output, print_command):
@@ -91,6 +95,7 @@ def execute_command_with_return(command, ignore_error, print_output, print_comma
 
     if retval != 0 and ignore_error == False:
         on_error(command, retval)
+        raise Exception("Failed to execute command and get results")
     else:
         return results
 
@@ -192,9 +197,11 @@ def write_error(line):
         scroll.see(tk.END)
         scroll.update()
 
+
 def check_wrk_dir(config_name):
     if not os.path.exists("./work/"+config_name):
         os.makedirs("./work/"+config_name)
+
 
 def check_dir(config_name, subdir):
     check_path = "./work/{0}/{1}".format(config_name, subdir)

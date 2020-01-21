@@ -119,6 +119,7 @@ def check_limts(server):
 
     return ret_val
 
+
 def check_requests(server):
     ret_val = False
     if int(server.pod.requests['cpu']) > 0:
@@ -131,6 +132,7 @@ def check_requests(server):
         ret_val = True
 
     return ret_val
+
 
 def check_volume_mount(server):
     ret_val = False
@@ -149,6 +151,7 @@ def check_volume_mount(server):
 
     return ret_val
 
+
 def check_pod(server):
     ret_val = False
 
@@ -165,6 +168,7 @@ def check_pod(server):
         ret_val = True
 
     return ret_val
+
 
 def build_cb_cluster(path, cbcluster_config):
     utils.write_line("Deploying Couchbase Cluster")
@@ -266,6 +270,8 @@ def build_cb_cluster(path, cbcluster_config):
             utils.write_error("At least one server must be configured")
             return
         else:
+            vct_string = ""
+            vct_map = {}
             cb_yaml.write("  servers:\n")
             for itr in cbcluster_config.servers:
                 server = cbcluster_config.servers[itr]
@@ -332,16 +338,23 @@ def build_cb_cluster(path, cbcluster_config):
                         #    cb_yaml.write(vm_analytics)
 
                     if len(cbcluster_config.vct) >= 1:
-                        cb_yaml.write("  volumeClaimTemplates:\n")
+                        if len(vct_string) < 1:
+                            vct_string = vct_string + "  volumeClaimTemplates:\n"
                         for itr in cbcluster_config.vct:
                             tmp_vct = cbcluster_config.vct[itr]
-                            cb_yaml.write("    - metadata:\n")
-                            cb_yaml.write("        name: {}\n".format(tmp_vct.name))
-                            cb_yaml.write("      spec:\n")
-                            cb_yaml.write("        storageClassName: \"{}\"\n".format(tmp_vct.storage_class))
-                            cb_yaml.write("        resources:\n")
-                            cb_yaml.write("          requests:\n")
-                            cb_yaml.write("            storage: \"{0}{1}\"\n".format(tmp_vct.size, tmp_vct.size_type))
+                            if tmp_vct.name not in vct_map:
+                                vct_map[tmp_vct.name] = "Added"
+                                vct_string = vct_string + "    - metadata:\n"
+                                vct_string = vct_string + "        name: {}\n".format(tmp_vct.name)
+                                vct_string = vct_string + "      spec:\n"
+                                vct_string = vct_string + "        storageClassName: \"{}\"\n".format(tmp_vct.storage_class)
+                                vct_string = vct_string + "        resources:\n"
+                                vct_string = vct_string + "          requests:\n"
+                                vct_string = vct_string + "            storage: \"{0}{1}\"\n".format(tmp_vct.size, tmp_vct.size_type)
+
+            #After all the servers are added to the yaml configure the VCT once
+            if len(vct_string) > 1:
+                cb_yaml.write(vct_string)
 
 
 def build_custom_pod(path, cbcluster_config, name, image):

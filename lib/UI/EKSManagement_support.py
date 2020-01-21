@@ -107,40 +107,7 @@ def build_cluster():
     eks_config.set_eks_cluster_name(w.TEntry_EKS.get())
 
     #utils.write_line("Building Configuration:: str(eks_config))
-
-    utils.write_line("Building VPC")
-    cloud.build_vpc(eks_config.get_vpc_stack_name(), eks_config.get_attempts(), eks_config.get_wait_sec())
-
-    utils.write_line("Building EKS Cluster")
-    cloud.build_kube_cluster(eks_config.get_eks_cluster_name(), eks_config.get_attempts(),
-                             eks_config.get_wait_sec(), eks_config.get_arn())
-
-    utils.write_line("Connecting to Kubernetes Cluster")
-    cloud.connect_to_eks_cluster(eks_config.get_eks_cluster_name())
-
-    utils.write_line("Building Worker Nodes")
-
-    wrk_nodes = eks_config.get_work_nodes()
-    for inst in wrk_nodes:
-        cloud.build_work_nodes(wrk_nodes[inst], eks_config.get_eks_cluster_name(),
-                               eks_config.get_attempts(), eks_config.get_wait_sec(), eks_config.get_name())
-
-    utils.write_line("Applying auth map")
-    cloud.apply_auth_map(eks_config.get_name())
-
-    utils.write_line("Validating Nodes are ready")
-    if cloud.validate_nodes_ready(eks_config.get_attempts(), eks_config.get_wait_sec()):
-        utils.write_line("Applying labels")
-        for inst in wrk_nodes:
-            cloud.apply_labels(wrk_nodes[inst])
-    else:
-        utils.write_error("Worker nodes not ready")
-        utils.on_error("Worker nodes not ready")
-
-    utils.write_line("Linking Node Groups")
-    cloud.link_node_groups(w.cb_config)
-
-    utils.write_line("Build of Kubernetes Cluster is complete")
+    cloud.build_cluster_ui(eks_config, w.cb_config)
 
 
 def connect_vpc():
@@ -156,27 +123,7 @@ def delete_cluster():
     eks_config.set_vpc_name(w.TEntry_VPC.get())
     eks_config.set_eks_cluster_name(w.TEntry_EKS.get())
 
-    cloud.unlink_node_groups(w.cb_config)
-    time.sleep(2)
-
-    worker_nodes = w.cb_config.get_eks_config().get_work_nodes()
-    for inst in worker_nodes:
-        cloud.detach_externaldns_policy(worker_nodes[inst].name)
-        cloud.delete_worker_node(worker_nodes[inst].get_name(), w.cb_config.get_eks_config().get_attempts(),
-                                 w.cb_config.get_eks_config().get_wait_sec())
-        time.sleep(2)
-
-    cloud.delete_eks_cluster(w.cb_config.get_eks_config().get_eks_cluster_name(), w.cb_config.get_eks_config().get_attempts(),
-                             w.cb_config.get_eks_config().get_wait_sec())
-    time.sleep(2)
-
-    cloud.remove_elb(w.cb_config.get_eks_config().vpc_stack_name)
-
-    time.sleep(2)
-
-    cloud.delete_vpc_stack(w.cb_config.get_eks_config().get_vpc_stack_name(),
-                           w.cb_config.get_eks_config().get_attempts(),
-                           w.cb_config.get_eks_config().get_wait_sec())
+    cloud.delete_cluster(w.cb_config)
 
 
 def return_cluster(cb_config):

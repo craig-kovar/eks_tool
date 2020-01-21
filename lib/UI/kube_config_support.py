@@ -273,6 +273,9 @@ def build_cluster(cb_config):
                               cloud.attach_externaldns_policy(w.cb_config.get_cbcluster_config().dns, i)
 
         if extdns_policy_pass:
+            #print("sed -i .bkup s/###hostedzone###/{0}/g ./work/{1}/kube/externaldns-deployment.yaml".format(
+            #        cloud.get_hosted_zone(w.cb_config.get_cbcluster_config().dns), w.cb_config.name
+            #    ))
             utils.execute_command(
                 "sed -i .bkup s/###hostedzone###/{0}/g ./work/{1}/kube/externaldns-deployment.yaml".format(
                     cloud.get_hosted_zone(w.cb_config.get_cbcluster_config().dns), w.cb_config.name

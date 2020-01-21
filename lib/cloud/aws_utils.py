@@ -469,10 +469,10 @@ def remove_elb(stack_name):
         if nwi['vpc'] == vpc_id:
             utils.execute_command("aws ec2 detach-network-interface --attachment-id {0} --region {1} --profile {2}".format(
                 nwi['AttachmentId'], REGION, PROFILE
-            ), False)
+            ), True)
             utils.execute_command("aws ec2 delete-network-interface --network-interface-id {0} --region {1} --profile {2}".format(
                 nwi['NetworkInterfaceId'], REGION, PROFILE
-            ), False)
+            ), True)
 
 
 def get_hosted_zone(dns):
@@ -488,7 +488,7 @@ def get_hosted_zone(dns):
 
     if len(tmphz) >= 1:
         hz_array = tmphz[0].split("/")
-        hostedzone = hz_array[len(hz_array) - 1]
+        hostedzone = hz_array[len(hz_array) - 1].replace("\"", "")
     else:
         hostedzone = None
 

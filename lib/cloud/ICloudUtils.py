@@ -1,4 +1,7 @@
+import time
+
 import lib.cloud.aws_utils as aws
+import lib.utils.ekstool_utils as utils
 
 TYPE = "aws"
 
@@ -247,3 +250,72 @@ def unlink_node_groups(cb_config):
     global TYPE
     if TYPE == "aws":
         aws.unlink_node_groups(cb_config)
+
+
+def build_cluster_ui(eks_config, cb_config):
+    build_cluster_exec(eks_config, cb_config)
+
+
+def build_cluster(cb_config):
+    build_cluster_exec(cb_config.get_eks_config(), cb_config)
+
+
+def build_cluster_exec(eks_config, cb_config):
+    utils.write_line("Building VPC")
+    build_vpc(eks_config.get_vpc_stack_name(), eks_config.get_attempts(), eks_config.get_wait_sec())
+
+    utils.write_line("Building EKS Cluster")
+    build_kube_cluster(eks_config.get_eks_cluster_name(), eks_config.get_attempts(),
+                             eks_config.get_wait_sec(), eks_config.get_arn())
+
+    utils.write_line("Connecting to Kubernetes Cluster")
+    connect_to_eks_cluster(eks_config.get_eks_cluster_name())
+
+    utils.write_line("Building Worker Nodes")
+
+    wrk_nodes = eks_config.get_work_nodes()
+    for inst in wrk_nodes:
+        build_work_nodes(wrk_nodes[inst], eks_config.get_eks_cluster_name(),
+                               eks_config.get_attempts(), eks_config.get_wait_sec(), eks_config.get_name())
+
+    utils.write_line("Applying auth map")
+    apply_auth_map(eks_config.get_name())
+
+    utils.write_line("Validating Nodes are ready")
+    if validate_nodes_ready(eks_config.get_attempts(), eks_config.get_wait_sec()):
+        utils.write_line("Applying labels")
+        for inst in wrk_nodes:
+            apply_labels(wrk_nodes[inst])
+    else:
+        utils.write_error("Worker nodes not ready")
+        utils.on_error("Worker nodes not ready")
+
+    utils.write_line("Linking Node Groups")
+    link_node_groups(cb_config)
+
+    utils.write_line("Build of Kubernetes Cluster is complete")
+
+
+def delete_cluster(cb_config):
+    unlink_node_groups(cb_config)
+    time.sleep(2)
+
+    worker_nodes = cb_config.get_eks_config().get_work_nodes()
+    for inst in worker_nodes:
+        detach_externaldns_policy(worker_nodes[inst].name)
+        delete_worker_node(worker_nodes[inst].get_name(), cb_config.get_eks_config().get_attempts(),
+                                 cb_config.get_eks_config().get_wait_sec())
+        time.sleep(2)
+
+    delete_eks_cluster(cb_config.get_eks_config().get_eks_cluster_name(),
+                             cb_config.get_eks_config().get_attempts(),
+                             cb_config.get_eks_config().get_wait_sec())
+    time.sleep(2)
+
+    remove_elb(cb_config.get_eks_config().vpc_stack_name)
+
+    time.sleep(2)
+
+    delete_vpc_stack(cb_config.get_eks_config().get_vpc_stack_name(),
+                           cb_config.get_eks_config().get_attempts(),
+                           cb_config.get_eks_config().get_wait_sec())
